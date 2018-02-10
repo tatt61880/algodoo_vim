@@ -1,7 +1,7 @@
 " Vim indent file
 " Language:     Algodoo
 " Maintainer:   @tatt61880
-" Last Modified:2018/02/11 03:14:46.
+" Last Modified:2018/02/11 06:23:04.
 "
 " Special Thanks:
 "   http://labs.timedia.co.jp/2011/04/9-points-to-customize-automatic-indentation-in-vim.html
@@ -10,25 +10,70 @@
 " Put this file into "indent" folder.
 
 if exists('b:did_indent')
-	finish
+	"finish
 endif
 
 setlocal indentexpr=GetAlgodooIndent()
 setlocal indentkeys+=!^F,o,O,0=end,0=elif,0=else,0=case,0=default,0=catch,0=finally
 
-function! s:matchcount(lnum, expr, pat, ...)
-	let start = get(a:, "1", 0)
-	let result = match(a:expr, a:pat, start)
-	if result == -1
-		return 0
-	endif
-    if synIDattr(synID(a:lnum, result, 1), 'name') == "AlgodooLineComment"
-		return 0
-	elseif synIDattr(synID(a:lnum, result, 1), 'name') == "AlgodooBlockComment"
-		return s:matchcount(a:lnum, a:expr, a:pat, result+1)
-	else
-		return s:matchcount(a:lnum, a:expr, a:pat, result+1) + 1
-	endif
+function! s:SubIndent(plnum, pline, lnum, line, opn, cls)
+	let plen = strlen(a:pline)
+	let res = 0
+	for i in range(0, plen - 1)
+		if a:pline[i] == a:opn
+			let synName = synIDattr(synID(a:plnum, i + 1, 1), 'name')
+			if synName == "AlgodooLineComment"
+				break
+			elseif synName == "AlgodooBlockComment"
+			elseif synName == "AlgodooString"
+			else
+				let res += 1
+			endif
+		endif
+		if res != 0
+			if a:pline[i] == a:cls
+				let synName = synIDattr(synID(a:plnum, i + 1, 1), 'name')
+				if synName == "AlgodooLineComment"
+					break
+				elseif synName == "AlgodooBlockComment"
+				elseif synName == "AlgodooString"
+				else
+					let res -= 1
+				endif
+			endif
+		endif
+	endfor
+
+	let len = strlen(a:line)
+	let temp = 0
+	for i in range(0, len - 1)
+		if a:line[i] == a:opn
+			let synName = synIDattr(synID(a:lnum, i + 1, 1), 'name')
+			if synName == "AlgodooLineComment"
+				break
+			elseif synName == "AlgodooBlockComment"
+			elseif synName == "AlgodooString"
+			else
+				let temp += 1
+			endif
+		endif
+		if a:line[i] == a:cls
+			let synName = synIDattr(synID(a:lnum, i + 1, 1), 'name')
+			if synName == "AlgodooLineComment"
+				break
+			elseif synName == "AlgodooBlockComment"
+			elseif synName == "AlgodooString"
+			else
+				if temp == 0
+					let res -= 1
+				else
+					let temp -= 1
+				endif
+			endif
+		endif
+	endfor
+
+	return res
 endfunction
 
 function! GetAlgodooIndent()
@@ -39,9 +84,10 @@ function! GetAlgodooIndent()
 	let ind = indent(plnum)
 
 	let pline = getline(plnum)
-	let ind += &l:shiftwidth * s:matchcount(plnum, pline, "{")
 	let line = getline(v:lnum)
-	let ind -= &l:shiftwidth * s:matchcount(v:lnum, line, "}")
+	let ind += &l:shiftwidth * s:SubIndent(plnum, pline, v:lnum, line, '{', '}')
+	let ind += &l:shiftwidth * s:SubIndent(plnum, pline, v:lnum, line, '[', ']')
+	let ind += &l:shiftwidth * s:SubIndent(plnum, pline, v:lnum, line, '(', ')')
 
 	return ind
 endfunction
