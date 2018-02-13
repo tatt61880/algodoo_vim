@@ -1,7 +1,7 @@
 " Vim indent file
 " Language:     Algodoo
 " Maintainer:   @tatt61880
-" Last Modified:2018/02/11 06:23:04.
+" Last Modified:2018/02/13 20:53:43.
 "
 " Special Thanks:
 "   http://labs.timedia.co.jp/2011/04/9-points-to-customize-automatic-indentation-in-vim.html
@@ -10,7 +10,7 @@
 " Put this file into "indent" folder.
 
 if exists('b:did_indent')
-	"finish
+	finish
 endif
 
 setlocal indentexpr=GetAlgodooIndent()
